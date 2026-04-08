@@ -7,6 +7,7 @@ import { logger } from './utils/logger';
 import reviewRoutes from './routes/reviewRoutes';
 import knowledgeBaseRoutes from './routes/knowledgeBaseRoutes';
 import authRoutes from './routes/authRoutes';
+import settingsRoutes from './routes/settingsRoutes';
 import { startReviewPolling } from './services/reviewPoller';
 import { initTelegramBot } from './services/telegramBot';
 
@@ -31,6 +32,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/knowledge-base', knowledgeBaseRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // 헬스 체크
 app.get('/health', (req, res) => {
@@ -54,3 +56,4 @@ app.listen(PORT, () => {
 });
 
 export default app;
+

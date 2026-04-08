@@ -6,6 +6,7 @@ import {
   MessageOutlined,
   DatabaseOutlined,
   LogoutOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { authService } from '../services/authService';
 
@@ -37,6 +38,12 @@ const Layout: React.FC = () => {
       icon: <DatabaseOutlined />,
       label: '지식베이스',
       onClick: () => navigate('/knowledge-base'),
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: '설정',
+      onClick: () => navigate('/settings'),
     },
   ];
 
@@ -90,3 +97,4 @@ const Layout: React.FC = () => {
 };
 
 export default Layout;
+

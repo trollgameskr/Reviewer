@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import ReviewList from './pages/ReviewList';
 import ReviewDetail from './pages/ReviewDetail';
 import KnowledgeBase from './pages/KnowledgeBase';
+import Settings from './pages/Settings';
 import Layout from './components/Layout';
 import { authService } from './services/authService';
 
@@ -44,6 +45,7 @@ function App() {
               <Route path="reviews" element={<ReviewList />} />
               <Route path="reviews/:id" element={<ReviewDetail />} />
               <Route path="knowledge-base" element={<KnowledgeBase />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </Router>
@@ -53,3 +55,4 @@ function App() {
 }
 
 export default App;
+
