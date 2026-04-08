@@ -5,6 +5,42 @@ import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
+function getAiConfigPath() {
+  return path.resolve(process.cwd(), 'credentials/ai-config.json');
+}
+
+// AI 설정 조회
+router.get('/ai', authenticate, async (req: any, res: any, next: NextFunction) => {
+  try {
+    const aiConfigPath = getAiConfigPath();
+    if (fs.existsSync(aiConfigPath)) {
+      const content = fs.readFileSync(aiConfigPath, 'utf-8');
+      const config = JSON.parse(content);
+      res.json(config);
+    } else {
+      res.json({ provider: 'openai', model: 'gpt-4-turbo-preview' });
+    }
+  } catch (error) {
+    next(error);
+  }
+});
+
+// AI 설정 저장
+router.post('/ai', authenticate, async (req: any, res: any, next: NextFunction) => {
+  try {
+    const config = req.body;
+    const aiConfigPath = getAiConfigPath();
+    const targetDir = path.dirname(aiConfigPath);
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+    fs.writeFileSync(aiConfigPath, JSON.stringify(config, null, 2), 'utf-8');
+    res.json({ success: true, message: 'AI 설정이 성공적으로 저장되었습니다.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // 서비스 계정 키 업로드
 router.post('/service-account', authenticate, async (req: any, res: any, next: NextFunction) => {
   try {

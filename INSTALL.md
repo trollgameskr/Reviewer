@@ -299,6 +299,25 @@ cd /volume1/docker/reviewer
 docker-compose up -d
 ```
 
+### 10.6 원클릭 자동 업데이트 설정 (추천)
+
+소스 코드 변경 시(Git 저장소 업데이트 등) 간편하게 코드를 반영하고 컨테이너를 재시작하려면 DSM의 작업 스케줄러를 활용하는 것이 안전합니다.
+
+1. DSM 제어판 > 작업 스케줄러
+2. "생성" > "예약된 작업" > "사용자 정의 스크립트"
+3. 일반 탭:
+   - 작업명: "Reviewer 자동 업데이트"
+   - 사용자: root
+4. 스케줄 탭:
+   - 스케줄 비활성화 (수동 실행용) 또는 원하는 자동 주기 설정
+5. 지정된 스크립트 탭:
+```bash
+cd /volume1/docker/reviewer
+git pull
+/usr/local/bin/docker-compose up -d --build
+```
+6. 저장된 "Reviewer 자동 업데이트" 작업을 찾아 우클릭 후 **[실행]**을 누르면 원터치 배포가 완료됩니다.
+
 ## 11. HTTPS 설정 (권장)
 
 ### 11.1 Let's Encrypt 인증서 발급

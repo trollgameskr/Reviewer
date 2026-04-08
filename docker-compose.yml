@@ -25,11 +25,11 @@ services:
       NODE_ENV: production
       DATABASE_URL: postgresql://reviewer:reviewer_password@postgres:5432/reviewer_db
       PORT: 3000
+      OPENAI_API_KEY: 'sk-placeholder'
+      JWT_SECRET: 'jwt-placeholder-secret-123456789'
     ports:
       - "33000:3000"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+
     depends_on:
       - postgres
     networks:
