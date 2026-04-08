@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, NextFunction } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../middleware/auth';
 import { body, validationResult } from 'express-validator';
@@ -7,7 +7,7 @@ const router = Router();
 const prisma = new PrismaClient();
 
 // 모든 지식베이스 조회
-router.get('/', authenticate, async (req, res, next) => {
+router.get('/', authenticate, async (req: any, res: any, next: NextFunction) => {
   try {
     const { category, enabled } = req.query;
 
@@ -27,7 +27,7 @@ router.get('/', authenticate, async (req, res, next) => {
 });
 
 // 특정 지식베이스 조회
-router.get('/:id', authenticate, async (req, res, next) => {
+router.get('/:id', authenticate, async (req: any, res: any, next: NextFunction) => {
   try {
     const { id } = req.params;
 
@@ -55,7 +55,7 @@ router.post(
     body('answerTemplate').notEmpty().withMessage('답변 템플릿은 필수입니다'),
     body('keywords').isArray().withMessage('키워드는 배열이어야 합니다'),
   ],
-  async (req, res, next) => {
+  async (req: any, res: any, next: NextFunction) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -83,7 +83,7 @@ router.post(
 );
 
 // 지식베이스 수정
-router.put('/:id', authenticate, async (req, res, next) => {
+router.put('/:id', authenticate, async (req: any, res: any, next: NextFunction) => {
   try {
     const { id } = req.params;
     const { category, questionPattern, answerTemplate, keywords, priority, enabled } = req.body;
@@ -107,7 +107,7 @@ router.put('/:id', authenticate, async (req, res, next) => {
 });
 
 // 지식베이스 삭제
-router.delete('/:id', authenticate, async (req, res, next) => {
+router.delete('/:id', authenticate, async (req: any, res: any, next: NextFunction) => {
   try {
     const { id } = req.params;
 
@@ -122,7 +122,7 @@ router.delete('/:id', authenticate, async (req, res, next) => {
 });
 
 // 카테고리 목록
-router.get('/categories/list', authenticate, async (req, res, next) => {
+router.get('/categories/list', authenticate, async (req: any, res: any, next: NextFunction) => {
   try {
     const categories = await prisma.knowledgeBase.findMany({
       select: { category: true },
