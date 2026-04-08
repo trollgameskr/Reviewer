@@ -6,6 +6,13 @@ import path from 'path';
 
 const prisma = new PrismaClient();
 
+interface PromptConfig {
+  systemPrompt: string;
+  userPromptTemplate: string;
+  temperature: number;
+  maxTokens: number;
+}
+
 export class AIService {
   private getClientAndModel(): { client: OpenAI; model: string; fallbackModel: string } {
     const defaultModel = 'gpt-4-turbo-preview';
@@ -42,6 +49,50 @@ export class AIService {
     };
   }
 
+  private getPromptConfig(): PromptConfig {
+    const configPath = path.resolve(process.cwd(), 'credentials/prompt-config.json');
+    const defaults: PromptConfig = {
+      systemPrompt: `당신은 구글 플레이 스토어 앱 개발자입니다. 사용자 리뷰에 대해 친절하고 전문적인 한글 답변을 작성해야 합니다.
+답변은 감사의 표현으로 시작하고, 사용자의 피드백을 인정하며, 필요한 경우 해결 방법이나 향후 개선 계획을 제시해야 합니다.
+3가지 다른 스타일의 답변 옵션을 생성하세요: 1) 공식적이고 전문적인 톤, 2) 친근하고 캐주얼한 톤, 3) 간결하고 직접적인 톤`,
+      userPromptTemplate: `{context}
+
+사용자 정보:
+- 이름: {userName}
+- 평점: {rating}/5
+
+리뷰 내용:
+"{reviewText}"
+
+위 리뷰에 대한 답변을 3가지 스타일로 작성해주세요:
+
+[옵션 1: 공식적]
+(공식적이고 전문적인 톤의 답변)
+
+[옵션 2: 친근함]
+(친근하고 캐주얼한 톤의 답변)
+
+[옵션 3: 간결함]
+(간결하고 직접적인 톤의 답변)
+
+각 답변은 2-4문장으로 작성하고, 감사 표현을 포함하며, 사용자의 피드백을 인정해야 합니다.`,
+      temperature: 0.8,
+      maxTokens: 1000,
+    };
+
+    if (fs.existsSync(configPath)) {
+      try {
+        const content = fs.readFileSync(configPath, 'utf-8');
+        const config = JSON.parse(content);
+        return { ...defaults, ...config };
+      } catch (e) {
+        logger.error('Failed to parse prompt-config.json, using defaults', e);
+      }
+    }
+
+    return defaults;
+  }
+
   async generateReplyKorean(
     reviewText: string,
     rating: number,
@@ -54,7 +105,8 @@ export class AIService {
       });
 
       const context = this.buildContext(knowledgeBase);
-      const prompt = this.buildPrompt(reviewText, rating, userName, context);
+      const promptConfig = this.getPromptConfig();
+      const prompt = this.buildPromptFromTemplate(reviewText, rating, userName, context, promptConfig.userPromptTemplate);
       
       const { client, model } = this.getClientAndModel();
 
@@ -63,17 +115,15 @@ export class AIService {
         messages: [
           {
             role: 'system',
-            content: `당신은 구글 플레이 스토어 앱 개발자입니다. 사용자 리뷰에 대해 친절하고 전문적인 한글 답변을 작성해야 합니다.
-답변은 감사의 표현으로 시작하고, 사용자의 피드백을 인정하며, 필요한 경우 해결 방법이나 향후 개선 계획을 제시해야 합니다.
-3가지 다른 스타일의 답변 옵션을 생성하세요: 1) 공식적이고 전문적인 톤, 2) 친근하고 캐주얼한 톤, 3) 간결하고 직접적인 톤`,
+            content: promptConfig.systemPrompt,
           },
           {
             role: 'user',
             content: prompt,
           },
         ],
-        temperature: 0.8,
-        max_tokens: 1000,
+        temperature: promptConfig.temperature,
+        max_tokens: promptConfig.maxTokens,
       });
 
       const response = completion.choices[0].message.content || '';
@@ -156,34 +206,18 @@ export class AIService {
     return context;
   }
 
-  private buildPrompt(
+  private buildPromptFromTemplate(
     reviewText: string,
     rating: number,
     userName: string,
-    context: string
+    context: string,
+    template: string
   ): string {
-    return `${context}
-
-사용자 정보:
-- 이름: ${userName}
-- 평점: ${rating}/5
-
-리뷰 내용:
-"${reviewText}"
-
-위 리뷰에 대한 답변을 3가지 스타일로 작성해주세요:
-
-[옵션 1: 공식적]
-(공식적이고 전문적인 톤의 답변)
-
-[옵션 2: 친근함]
-(친근하고 캐주얼한 톤의 답변)
-
-[옵션 3: 간결함]
-(간결하고 직접적인 톤의 답변)
-
-각 답변은 2-4문장으로 작성하고, 감사 표현을 포함하며, 사용자의 피드백을 인정해야 합니다.
-`;
+    return template
+      .replace('{context}', context)
+      .replace('{userName}', userName)
+      .replace('{rating}', String(rating))
+      .replace('{reviewText}', reviewText);
   }
 
   private parseMultipleSuggestions(response: string): string[] {

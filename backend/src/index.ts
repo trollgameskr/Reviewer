@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
 import reviewRoutes from './routes/reviewRoutes';
@@ -49,11 +51,12 @@ app.listen(PORT, () => {
   // 리뷰 폴링 시작
   startReviewPolling();
 
-  // 텔레그램 봇 초기화 (설정된 경우)
-  if (process.env.TELEGRAM_BOT_TOKEN) {
+  // 텔레그램 봇 초기화 (설정 파일 또는 .env)
+  const telegramConfigPath = path.resolve(process.cwd(), 'credentials/telegram-config.json');
+  const hasTelegramConfig = fs.existsSync(telegramConfigPath);
+  if (process.env.TELEGRAM_BOT_TOKEN || hasTelegramConfig) {
     initTelegramBot();
   }
 });
 
 export default app;
-

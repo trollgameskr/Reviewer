@@ -3,19 +3,45 @@ import { PrismaClient } from '@prisma/client';
 import { logger } from '../utils/logger';
 import { aiService } from './aiService';
 import { googlePlayService } from './googlePlayService';
+import fs from 'fs';
+import path from 'path';
 
 const prisma = new PrismaClient();
 let bot: TelegramBot | null = null;
 
-export const initTelegramBot = () => {
-  const token = process.env.TELEGRAM_BOT_TOKEN;
+function getTelegramConfig(): { token: string; chatId: string; enabled: boolean } {
+  const configPath = path.resolve(process.cwd(), 'credentials/telegram-config.json');
+  
+  if (fs.existsSync(configPath)) {
+    try {
+      const content = fs.readFileSync(configPath, 'utf-8');
+      const config = JSON.parse(content);
+      return {
+        token: config.botToken || process.env.TELEGRAM_BOT_TOKEN || '',
+        chatId: config.chatId || process.env.TELEGRAM_CHAT_ID || '',
+        enabled: config.enabled !== false,
+      };
+    } catch (e) {
+      logger.error('Failed to parse telegram-config.json', e);
+    }
+  }
 
-  if (!token) {
-    logger.warn('텔레그램 봇 토큰이 설정되지 않았습니다');
+  return {
+    token: process.env.TELEGRAM_BOT_TOKEN || '',
+    chatId: process.env.TELEGRAM_CHAT_ID || '',
+    enabled: true,
+  };
+}
+
+export const initTelegramBot = () => {
+  const config = getTelegramConfig();
+
+  if (!config.token || !config.enabled) {
+    logger.warn('텔레그램 봇 토큰이 설정되지 않았거나 비활성화 상태입니다');
     return;
   }
 
-  bot = new TelegramBot(token, { polling: true });
+  bot = new TelegramBot(config.token, { polling: true });
 
   bot.on('callback_query', async (callbackQuery) => {
     try {
@@ -37,7 +63,8 @@ export const sendTelegramNotification = async (
   review: any,
   suggestions: string[]
 ) => {
-  if (!bot || !process.env.TELEGRAM_CHAT_ID) return;
+  const config = getTelegramConfig();
+  if (!bot || !config.chatId || !config.enabled) return;
 
   try {
     const message = `
@@ -66,7 +93,7 @@ ${suggestions.map((s, i) => `\n${i + 1}. ${s}`).join('\n')}
       ],
     };
 
-    await bot.sendMessage(process.env.TELEGRAM_CHAT_ID, message, {
+    await bot.sendMessage(config.chatId, message, {
       reply_markup: keyboard,
     });
 
