@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: reviewer-db
+    environment:
+      POSTGRES_USER: reviewer
+      POSTGRES_PASSWORD: reviewer_password
+      POSTGRES_DB: reviewer_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - reviewer-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: reviewer-backend
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://reviewer:reviewer_password@postgres:5432/reviewer_db
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+    networks:
+      - reviewer-network
+    restart: unless-stopped
+    command: npm run start
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: reviewer-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - reviewer-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  reviewer-network:
+    driver: bridge
