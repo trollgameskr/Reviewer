@@ -16,9 +16,9 @@ import {
 } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import { knowledgeBaseService, KnowledgeBase } from '../services/knowledgeBaseService';
-
 const { TextArea } = Input;
-const { Option } = Select;
+
+
 
 const KnowledgeBasePage: React.FC = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);

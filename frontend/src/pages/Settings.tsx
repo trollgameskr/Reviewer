@@ -10,7 +10,7 @@ const { TextArea } = Input;
 
 const Settings: React.FC = () => {
   // 서비스 계정
-  const [uploading, setUploading] = useState(false);
+  const [, setUploading] = useState(false);
 
   // AI 모델 설정
   const [aiForm] = Form.useForm<AIConfig>();
@@ -32,6 +32,7 @@ const Settings: React.FC = () => {
     loadAiConfig();
     loadTelegramConfig();
     loadPromptConfig();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ─── AI 모델 설정 ──────────────────────────────────────
