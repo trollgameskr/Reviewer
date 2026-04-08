@@ -27,6 +27,7 @@ services:
       PORT: 3000
       OPENAI_API_KEY: 'sk-placeholder'
       JWT_SECRET: 'jwt-placeholder-secret-123456789'
+      WEBHOOK_API_KEY: 'trollgamesgood'
     ports:
       - "33000:3000"
 
