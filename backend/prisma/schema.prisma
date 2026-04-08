@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  reviewId        String   @unique
+  appPackageName  String
+  userName        String
+  userImage       String?
+  rating          Int
+  text            String
+  language        String
+  originalLanguage String?
+  createdAt       DateTime
+  updatedAt       DateTime @updatedAt
+  status          ReviewStatus @default(PENDING)
+
+  suggestions     ReplySuggestion[]
+  replies         ReplyHistory[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("reviews")
+}
+
+model ReplySuggestion {
+  id                    String   @id @default(uuid())
+  reviewId              String
+  suggestionTextKr      String
+  suggestionTextOriginal String?
+  confidenceScore       Float?
+  selected              Boolean  @default(false)
+  createdAt             DateTime @default(now())
+
+  review                Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@map("reply_suggestions")
+}
+
+model ReplyHistory {
+  id          String   @id @default(uuid())
+  reviewId    String
+  replyText   String
+  repliedAt   DateTime @default(now())
+  repliedBy   String   // 'web' or 'telegram'
+
+  review      Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@map("reply_history")
+}
+
+model KnowledgeBase {
+  id              String   @id @default(uuid())
+  category        String
+  questionPattern String
+  answerTemplate  String
+  keywords        String[]
+  priority        Int      @default(0)
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([category])
+  @@index([enabled])
+  @@map("knowledge_base")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  password  String
+  role      UserRole @default(ADMIN)
+  createdAt DateTime @default(now())
+
+  @@map("users")
+}
+
+enum ReviewStatus {
+  PENDING
+  ANSWERED
+  IGNORED
+}
+
+enum UserRole {
+  ADMIN
+  VIEWER
+}
