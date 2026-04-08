@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { authenticate } from '../middleware/auth';
 import { aiService } from '../services/aiService';
 import { googlePlayService } from '../services/googlePlayService';
+import { reviewPollerService } from '../services/reviewPoller';
 import { logger } from '../utils/logger';
 
 const router = Router();
@@ -221,6 +222,54 @@ router.get('/stats/summary', authenticate, async (req, res, next) => {
       total,
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+// ─── 폴러 제어 ────────────────────────────────────────────────
+
+// 폴러 상태 조회
+router.get('/poller/status', authenticate, async (req, res, next) => {
+  try {
+    res.json(reviewPollerService.getStatus());
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 수동 리뷰 체크 트리거
+router.post('/poller/trigger', authenticate, async (req, res, next) => {
+  try {
+    const result = await reviewPollerService.triggerNow();
+    res.json({
+      success: true,
+      newReviews: result.newReviews,
+      status: reviewPollerService.getStatus(),
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 폴링 간격 변경
+router.post('/poller/config', authenticate, async (req, res, next) => {
+  try {
+    const { intervalMs } = req.body;
+
+    if (!intervalMs || typeof intervalMs !== 'number') {
+      return res.status(400).json({ error: 'intervalMs(숫자)를 입력해주세요' });
+    }
+
+    reviewPollerService.setIntervalMs(intervalMs);
+    res.json({
+      success: true,
+      message: `폴링 간격이 ${intervalMs / 1000}초로 변경되었습니다`,
+      status: reviewPollerService.getStatus(),
+    });
+  } catch (error: any) {
+    if (error.message?.includes('최소')) {
+      return res.status(400).json({ error: error.message });
+    }
     next(error);
   }
 });

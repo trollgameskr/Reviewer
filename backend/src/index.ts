@@ -10,6 +10,7 @@ import reviewRoutes from './routes/reviewRoutes';
 import knowledgeBaseRoutes from './routes/knowledgeBaseRoutes';
 import authRoutes from './routes/authRoutes';
 import settingsRoutes from './routes/settingsRoutes';
+import webhookRoutes from './routes/webhookRoutes';
 import { startReviewPolling } from './services/reviewPoller';
 import { initTelegramBot } from './services/telegramBot';
 
@@ -35,6 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/knowledge-base', knowledgeBaseRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/webhook', webhookRoutes);
 
 // 헬스 체크
 app.get('/health', (req, res) => {
