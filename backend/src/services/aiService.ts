@@ -61,12 +61,9 @@ export class AIService {
       const completion = await client.chat.completions.create({
         model: model,
         messages: [
-          {
-            role: 'system',
-            content: \당신은 구글 플레이 스토어 앱 개발자입니다. 사용자 리뷰에 대해 친절하고 전문적인 한글 답변을 작성해야 합니다.
+            content: `당신은 구글 플레이 스토어 앱 개발자입니다. 사용자 리뷰에 대해 친절하고 전문적인 한글 답변을 작성해야 합니다.
 답변은 감사의 표현으로 시작하고, 사용자의 피드백을 인정하며, 필요한 경우 해결 방법이나 향후 개선 계획을 제시해야 합니다.
-3가지 다른 스타일의 답변 옵션을 생성하세요: 1) 공식적이고 전문적인 톤, 2) 친근하고 캐주얼한 톤, 3) 간결하고 직접적인 톤\,
-          },
+3가지 다른 스타일의 답변 옵션을 생성하세요: 1) 공식적이고 전문적인 톤, 2) 친근하고 캐주얼한 톤, 3) 간결하고 직접적인 톤`,
           {
             role: 'user',
             content: prompt,
@@ -79,7 +76,7 @@ export class AIService {
       const response = completion.choices[0].message.content || '';
       const suggestions = this.parseMultipleSuggestions(response);
 
-      logger.info(\AI 답변 생성 완료: \개 옵션\);
+      logger.info(`AI 답변 생성 완료: ${suggestions.length}개 옵션`);
       return suggestions;
     } catch (error) {
       logger.error('AI 답변 생성 실패:', error);
@@ -98,7 +95,7 @@ export class AIService {
         messages: [
           {
             role: 'system',
-            content: \당신은 전문 번역가입니다. 한국어 텍스트를 \로 자연스럽게 번역하세요. 원문의 톤과 의미를 정확히 유지해야 합니다.\,
+            content: `당신은 전문 번역가입니다. 한국어 텍스트를 ${targetLanguage}로 자연스럽게 번역하세요. 원문의 톤과 의미를 정확히 유지해야 합니다.`,
           },
           {
             role: 'user',
@@ -147,10 +144,10 @@ export class AIService {
 
     let context = '참고 정보:\n\n';
     knowledgeBase.forEach((kb) => {
-      context += \카테고리: \\n\;
-      context += \질문 패턴: \\n\;
-      context += \답변 템플릿: \\n\;
-      context += \키워드: \\n\n\;
+      context += `카테고리: ${kb.category}\n`;
+      context += `질문 패턴: ${kb.questionPattern}\n`;
+      context += `답변 템플릿: ${kb.answerTemplate}\n`;
+      context += `키워드: ${kb.keywords?.join(', ')}\n\n`;
     });
 
     return context;
@@ -162,15 +159,14 @@ export class AIService {
     userName: string,
     context: string
   ): string {
-    return \
-\
+    return `${context}
 
 사용자 정보:
-- 이름: \
-- 평점: \/5
+- 이름: ${userName}
+- 평점: ${rating}/5
 
 리뷰 내용:
-"\"
+"${reviewText}"
 
 위 리뷰에 대한 답변을 3가지 스타일로 작성해주세요:
 
@@ -184,7 +180,7 @@ export class AIService {
 (간결하고 직접적인 톤의 답변)
 
 각 답변은 2-4문장으로 작성하고, 감사 표현을 포함하며, 사용자의 피드백을 인정해야 합니다.
-\;
+`;
   }
 
   private parseMultipleSuggestions(response: string): string[] {
